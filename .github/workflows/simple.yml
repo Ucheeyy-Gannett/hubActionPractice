@@ -27,6 +27,9 @@
 #          run: pwd
 #          shell: bash
 
+name: shell commands
+
+on: [ push]
 jobs:
   run-shell-command:
     runs-on: ubuntu-latest
@@ -56,6 +59,4 @@ jobs:
         name: "Directory Bash"
         run: pwd
         shell: bash
-name: "shell commands"
-true:
-  - push
+
