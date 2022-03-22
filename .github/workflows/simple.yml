@@ -19,9 +19,8 @@ jobs:
          (platform.processor())
         shell: python
 
-  run-windows-command:
-    runs-on: windows-latest
-    needs: ["run-shell-command"]
+  run-windows-command:   
+    runs-on: windows-latest 
     steps:
       - name: Directory Powershell
         run: Get-Location
