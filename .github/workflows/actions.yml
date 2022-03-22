@@ -1,10 +1,26 @@
 name: Actions Workflow
 
-on: #[push, pull_request] is one way to do it
-  schedule:
-    - cron: "0/5 * * * *" # minutes, hours, day of month, month and day of the week. * means any minute,...
-    - cron: "0/6 * * * *"
+on:
+  push:
+    branches:
+      - master
+      - "feature/*" #matches anything dt starts with feature/featA, feature/featB
+        #doesn't match feature/feat/a. #consult feature pattern sheet
+      - "feature/**"
+      - "!feature/featC" #This will run scripts as above except one with ! mark.
+    tags:
+      - v1.*
+    #tags-ignore:
+    paths:
+      - '**.js'
+      - "!filename.js"
+  # path-ignore:
+      - #[push, pull_request] is one way to do it
+#  schedule:
+#    - cron: "* * * * *" # minutes, hours, day of month, month and day of the week. * means any minute,...
+#    - cron: "* * * * * *"
     # push:
+  repository_dispatch:
   pull_request:
     types: [closed, assigned,
     opened, reopened]
