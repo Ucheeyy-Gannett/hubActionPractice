@@ -10,7 +10,8 @@ fi
 
 # verify CHANGELOG.md has a version that has been updated
 echo "---> Checking for update to version in CHANGELOG.md"
-if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+if [ "$GITHUB_EVENT_NAME" = "pull_request" ];
+then
     version_line=$( git diff refs/remotes/origin/master.. -- CHANGELOG.md | grep '^+# ' | head -1 )
 elif [ "$GITHUB_EVENT_NAME" = "push" ] && [ "$GITHUB_REF" = "refs/heads/master" ]; then
     version_line=$( git diff  HEAD~1 -- CHANGELOG.md | grep '^+# ' | head -1 )
@@ -35,39 +36,9 @@ if [[ -z "${version_num}"  ]]; then
     exit 1
 fi
 
-# check that the version number was actually increased
-echo "---> Checking that the version number was incremented"
-
-# split new version into an array
-IFS='.' eval 'new_version_split=($version_num)'
-
 # split old version into an array
-old_version_num=$(echo ${version_line_old} | grep -Eo [0-9].*[0-9]*.[0-9]*)
+old_version_num= (echo ${version_line_old} | grep -Eo [0-9].*[0-9]*.[0-9]*)
 IFS='.' eval 'old_version_split=($old_version_num)'
-
-# check major
-if [[ ${new_version_split[0]} -eq ${old_version_split[0]} ]];then
-  # check minor
-  if [[ ${new_version_split[1]} -eq ${old_version_split[1]} ]];then
-    # check patch
-    if [[ ${new_version_split[2]} -eq ${old_version_split[2]} ]];then
-      echo "::error::CHANGELOG.md version must be incremented. master version: $old_version_num, $GITHUB_REF version: $version_num"
-      exit 1
-    elif [[ ${new_version_split[2]} -lt ${old_version_split[2]} ]];then
-      echo "::error::CHANGELOG.md version must be incremented. master version: $old_version_num, $GITHUB_REF version: $version_num"
-      exit 1
-    fi
-  elif [[ ${new_version_split[1]} -lt ${old_version_split[1]} ]];then
-    echo "::error::CHANGELOG.md version must be incremented. master version: $old_version_num, $GITHUB_REF version: $version_num"
-    exit 1
-  fi
-  # output version
-  echo "::set-output name=new_version::$version_num"
-  echo "::notice::Version: $version_num"
-elif [[ ${new_version_split[0]} -lt ${old_version_split[0]} ]];then
-  echo "::error::CHANGELOG.md version must be incremented. master version: $old_version_num, $GITHUB_REF version: $version_num"
-  exit 1
-fi
 
 # Check that there's a Jira ticket-number in some message in the commit log
 # Look only in the changelog for the PR branch - ignore commits from master
