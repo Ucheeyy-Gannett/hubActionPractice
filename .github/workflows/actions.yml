@@ -1,39 +1,39 @@
-name: Actions Workflow
-
-on: #[push, pull_request] is one way to do it
-  push:
-  pull_request:
-    types: [closed, assigned,
-    opened, reopened]
-
-jobs:
-  run-github-actions:
-    runs-on: ubuntu-latest
-    steps:
-#     - name: List Files
-#       run: |
-#         pwd
-#         ls -a
-#         echo $GITHUB_SHA
-#         echo $GITHUB_REPOSITORY
-#         echo $GITHUB_WORKSPACE
-#         echo "${{ github.token }}"
-#         echo "Great is HE"
-##         git clone git@github.$GITHUB_REPOSITORY
-##         git checkout $GITHUB_SHA
-#     - name: Checkout
-#       uses: actions/checkout@v3
-#     - name: List Files After Checkout
-#       run: |
-#         pwd
-#         ls -a
-     - name: changelog-check
-       run: sh ./look.sh
-     - name: simple JS Action
-       id: greet
-       uses: actions/hello-world-javascript-action@v1.1
-       with:
-         who-to-greet: John
-     - name: Log Greeting Time
-       run: echo "${{ steps.greet.outputs.time }}"
-
+#name: Actions Workflow
+#
+#on: #[push, pull_request] is one way to do it
+#  push:
+#  pull_request:
+#    types: [closed, assigned,
+#    opened, reopened]
+#
+#jobs:
+#  run-github-actions:
+#    runs-on: ubuntu-latest
+#    steps:
+##     - name: List Files
+##       run: |
+##         pwd
+##         ls -a
+##         echo $GITHUB_SHA
+##         echo $GITHUB_REPOSITORY
+##         echo $GITHUB_WORKSPACE
+##         echo "${{ github.token }}"
+##         echo "Great is HE"
+###         git clone git@github.$GITHUB_REPOSITORY
+###         git checkout $GITHUB_SHA
+##     - name: Checkout
+##       uses: actions/checkout@v3
+##     - name: List Files After Checkout
+##       run: |
+##         pwd
+##         ls -a
+#     - name: changelog-check
+#       run: sh ./look.sh
+#     - name: simple JS Action
+#       id: greet
+#       uses: actions/hello-world-javascript-action@v1.1
+#       with:
+#         who-to-greet: John
+#     - name: Log Greeting Time
+#       run: echo "${{ steps.greet.outputs.time }}"
+#
