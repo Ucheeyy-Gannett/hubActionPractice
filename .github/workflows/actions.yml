@@ -28,7 +28,7 @@ jobs:
 #         pwd
 #         ls -a
      - name: changelog-check
-       run: sh |./look.sh
+       run: sh ./look.sh
      - name: simple JS Action
        id: greet
        uses: actions/hello-world-javascript-action@v1.1
