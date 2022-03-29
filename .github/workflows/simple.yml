@@ -26,4 +26,6 @@ jobs:
         run: Get-Location
       - name: Directory Bash
         run: pwd
+      - name: check-changelog
+        run: sh ./test.sh
         shell: bash
