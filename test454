@@ -1,0 +1,69 @@
+
+locals {
+  variables = yamldecode(file("config/variables.yaml"))
+}
+
+resource "scalr_workspace" "workspaces" {
+  name              = local.variables.name
+  environment_id    = local.variables.environment_id
+  auto_apply        = local.variables.auto_apply
+  operations        = local.variables.operations
+  terraform_version = local.variables.terraform_version
+  working_directory = local.variables.working_directory
+  vcs_provider_id   = local.variables.vcs_provider_id
+  agent_pool_id     = local.variables.agent_pool_id
+
+  dynamic "vcs_repo" {
+    for_each = local.variables.vcs_repo
+    content {
+      identifier       = vcs_repo.value.identifier
+      branch           = vcs_repo.value.branch
+      trigger_prefixes = vcs_repo.value.trigger_prefixes
+      dry_runs_enabled = vcs_repo.value.dry_runs_enabled
+    }
+  }
+
+  dynamic "hooks" {
+    for_each = local.variables.hooks
+    content {
+      pre_plan   = hooks.value.pre_plan
+      post_plan  = hooks.value.post_plan
+      pre_apply  = hooks.value.pre_apply
+      post_apply = hooks.value.post_apply
+    }
+  }
+}
+
+
+environment_id: "example_environment"
+name: "example_workspace"
+auto_apply: "false"
+operations: "true"
+terraform_version: "1.3.5"
+working_directory: ""
+run_operation_timeout: "0"
+agent_pool_id: ""
+vcs_provider_id: ""
+# vcs_repo: []
+# hooks: []
+
+vcs_repo:
+  - identifier: <identifier>
+    branch: <branch>
+    trigger_prefixes:
+      - <trigger_prefix_1>
+      - <trigger_prefix_2>
+    dry_runs_enabled: true
+
+  # - identifier: <identifier>
+  #   branch: <branch>
+  #   trigger_prefixes:
+  #     - <trigger_prefix_1>
+  #     - <trigger_prefix_2>
+  #   dry_runs_enabled: false
+
+hooks:
+  - pre_plan: <pre_plan_command>
+    post_plan: <post_plan_command>
+    pre_apply: <pre_apply_command>
+    post_apply: <post_apply_command>
