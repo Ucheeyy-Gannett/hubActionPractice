@@ -116,7 +116,7 @@ locals {
       post_apply: "<post_apply_command>"
 
 
-
+02/24/24main
 
 resource "scalr_workspace" "workspaces" {
   for_each = { for idx, config in yamldecode(file("${var.config_data_path}/variables.yaml")) : idx => config }
@@ -151,6 +151,9 @@ resource "scalr_workspace" "workspaces" {
     }
   }
 }
+
+
+var
 
 variable "config_data_path" {
   default = "./config"
