@@ -192,7 +192,129 @@ locals {
 }
 
 
+#############
 
+yaml
+- environment_id: env-tbugi2gmvme02p8
+  name: workspace-sample
+  auto_apply: false
+  operations: true
+  terraform_version: #1.3.5
+  working_directory: #GannettDigital/geratest-repo
+  run_operation_timeout: #0
+  agent_pool_id: #apool-tfb9eeb266qpomg
+  vcs_provider_id: vcs-u0uo0idihc327l0
+  vcs_repo:
+    - identifier: GannettDigital/terraform-scalr-workspace
+      branch: #main
+      trigger_prefixes:
+        # - GannettDigital/geratest-repo
+       # - "<trigger_prefix_2>"
+      dry_runs_enabled: 
+  hooks:
+    - pre_plan: 
+      post_plan: 
+      pre_apply: 
+      post_apply: 
+
+
+
+
+terraform {
+  required_version = ">=1.3.5"
+  required_providers {
+    scalr = {
+      source  = "registry.scalr.io/scalr/scalr"
+      version = "~> 1.0.0"
+
+    }
+  }
+}
+
+resource "scalr_workspace" "workspaces" {
+  for_each = { for idx, config in yamldecode(file("${var.config_data_path}/variables.yaml")) : idx => config }
+
+  name                  = each.value.name
+  environment_id        = each.value.environment_id
+  auto_apply            = each.value.auto_apply
+  operations            = each.value.operations
+  terraform_version     = each.value.terraform_version
+  working_directory     = each.value.working_directory
+  run_operation_timeout = each.value.run_operation_timeout
+  agent_pool_id         = each.value.agent_pool_id
+  vcs_provider_id       = each.value.vcs_provider_id
+
+  dynamic "vcs_repo" {
+    for_each = each.value.vcs_repo
+    content {
+      identifier       = vcs_repo.value.identifier
+      branch           = vcs_repo.value.branch
+      trigger_prefixes = vcs_repo.value.trigger_prefixes
+      dry_runs_enabled = vcs_repo.value.dry_runs_enabled
+    }
+  }
+
+  dynamic "hooks" {
+    for_each = each.value.hooks
+    content {
+      pre_plan   = hooks.value.pre_plan
+      post_plan  = hooks.value.post_plan
+      pre_apply  = hooks.value.pre_apply
+      post_apply = hooks.value.post_apply
+    }
+  }
+}
+
+
+
+locals {
+  workspace_configs = [
+    # for each_workspace in yamldecode(file("${var.config_data_path}/variables.yaml")) : {
+      for each_workspace in yamldecode(file("config/variables.yaml")) : {
+      environment_id        = each_workspace.environment_id
+      name                  = each_workspace.name
+      auto_apply            = try(each_workspace.auto_apply, null)
+      operations            = try(each_workspace.operations, null)
+      terraform_version     = try(each_workspace.terraform_version, null)
+      working_directory     = try(each_workspace.working_directory, null)
+      run_operation_timeout = try(each_workspace.run_operation_timeout, null)
+      agent_pool_id         = try(each_workspace.agent_pool_id, null)
+      vcs_provider_id       = each_workspace.vcs_provider_id
+      vcs_repo              = [
+        for repo in each_workspace.vcs_repo : {
+          identifier         = repo.identifier
+          branch             = repo.branch
+          trigger_prefixes   = repo.trigger_prefixes
+          dry_runs_enabled   = repo.dry_runs_enabled
+        }
+      ]
+      hooks                 = [
+        for hook in each_workspace.hooks : {
+          pre_plan   = hook.pre_plan
+          post_plan  = hook.post_plan
+          pre_apply  = hook.pre_apply
+          post_apply = hook.post_apply
+        }
+      ]
+    }
+  ]
+}
+
+
+
+
+
+
+module "workspace" {
+
+  source = "../terraform-scalr-workspace"
+ 
+  # name           = each.value.name
+  # environment_id = each.value.environment_id
+  
+
+  #config_data_path = "config/variables.yaml" # Since the YAML file is named vars.yaml, we have to use that name here.
+}
 
 
 
