@@ -1,0 +1,143 @@
+
+plaintext
+Copy code
+otel-connector/
+├── charts/
+├── templates/
+│   ├── configmap.yaml
+│   ├── daemonset.yaml
+│   ├── serviceaccount.yaml
+│   └── secret.yaml
+├── Chart.yaml
+└── values.yaml
+2. Chart.yaml
+This file contains metadata about the Helm chart.
+
+yaml
+Copy code
+apiVersion: v2
+name: otel-connector
+description: Deploy OTel connector as DaemonSet to export logs to Grafana Cloud and GCP's "test-project"
+version: 0.1.0
+3. values.yaml
+Define default values and placeholders for configuration.
+
+yaml
+Copy code
+image:
+  repository: otel/opentelemetry-collector-contrib
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+serviceAccount:
+  create: true
+  name: otel-connector
+
+gcp:
+  projectId: test-project
+  credentials: "" # Base64 encoded GCP service account JSON
+
+grafana:
+  cloud:
+    endpoint: logs-prod-us-central1.grafana.net:443
+    clientId: ""
+    clientSecret: ""
+    logsInstanceId: ""
+
+resources: {}
+4. Templates
+serviceaccount.yaml
+Optionally create a Kubernetes service account for the deployment.
+
+yaml
+Copy code
+# templates/serviceaccount.yaml
+{{- if .Values.serviceAccount.create }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Values.serviceAccount.name }}
+{{- end }}
+secret.yaml
+Create a Kubernetes Secret to store the GCP service account credentials.
+
+yaml
+Copy code
+# templates/secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .Values.serviceAccount.name }}-gcp
+type: Opaque
+data:
+  gcp-credentials.json: {{ .Values.gcp.credentials }}
+configmap.yaml
+This ConfigMap holds the OTel collector configuration for exporting logs.
+
+yaml
+Copy code
+# templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.serviceAccount.name }}-config
+data:
+  otel-collector-config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+          http:
+
+    exporters:
+      googlecloud:
+        project: "{{ .Values.gcp.projectId }}"
+        credentials_file: "/etc/otel/gcp-credentials.json"
+      grafanacloud:
+        endpoint: "{{ .Values.grafana.cloud.endpoint }}"
+        client_id: "{{ .Values.grafana.cloud.clientId }}"
+        client_secret: "{{ .Values.grafana.cloud.clientSecret }}"
+        logs_instance_id: "{{ .Values.grafana.cloud.logsInstanceId }}"
+
+    service:
+      pipelines:
+        logs:
+          receivers: [otlp]
+          exporters: [googlecloud, grafanacloud]
+daemonset.yaml
+Deploy the OTel collector as a DaemonSet using the above configurations.
+
+yaml
+Copy code
+# templates/daemonset.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ .Values.serviceAccount.name }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Values.serviceAccount.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.serviceAccount.name }}
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      containers:
+        - name: otel-collector
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: ["--config=/etc/otel/config/otel-collector-config.yaml"]
+          volumeMounts:
+            - name: config
+              mountPath: /etc/otel/config
+            - name: gcp-credentials
+              mountPath: /etc/otel
+      volumes:
+        - name: config
+          configMap:
+            name: {{ .Values.serviceAccount.name }}-config
+        - name: gcp-credentials
+          secret:
+            secretName: {{ .Values.serviceAccount.name }}-gcp
